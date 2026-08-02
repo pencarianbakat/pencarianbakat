@@ -31,14 +31,15 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.92);
-            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.94);
+            backdrop-filter: blur(14px);
             z-index: 9999;
             display: none;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             padding: 20px;
+            cursor: default;
         }
 
         .overlay-full.active {
@@ -76,7 +77,7 @@
             outline: none;
         }
 
-        /* ===== TEKS TROLL (RINGAN) ===== */
+        /* ===== TEKS TROLL ===== */
         .troll-main {
             margin-top: 24px;
             font-size: 2.8rem;
@@ -124,21 +125,22 @@
             }
         }
 
-        /* ===== TOMBOL CLOSE (LUCA) ===== */
+        /* ===== TOMBOL CLOSE (50x) ===== */
         .btn-close {
             margin-top: 20px;
-            padding: 12px 36px;
+            padding: 14px 40px;
             border-radius: 60px;
-            font-weight: 700;
-            font-size: 1rem;
+            font-weight: 800;
+            font-size: 1.1rem;
             border: none;
             cursor: pointer;
             background: #facc15;
             color: #0b1a33;
             box-shadow: 0 4px 0 #7a4d00;
-            transition: all 0.15s ease;
+            transition: all 0.1s ease;
             position: relative;
-            animation: closePulse 1.5s infinite;
+            animation: closePulse 1.2s infinite;
+            min-width: 200px;
         }
 
         .btn-close:hover {
@@ -160,6 +162,34 @@
             50% {
                 transform: scale(1.04);
             }
+        }
+
+        /* ===== PROGRESS BAR (lucu) ===== */
+        .progress-container {
+            margin-top: 12px;
+            width: 260px;
+            max-width: 80%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #facc15, #ff6b6b);
+            border-radius: 20px;
+            transition: width 0.2s ease;
+        }
+
+        .progress-text {
+            color: #b0b9d4;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
         /* ===== CONFETTI ===== */
@@ -439,6 +469,11 @@
             .troll-sub {
                 font-size: 1rem;
             }
+            .btn-close {
+                font-size: 0.9rem;
+                padding: 12px 24px;
+                min-width: 160px;
+            }
         }
     </style>
 </head>
@@ -496,10 +531,16 @@
 
         <div class="troll-main">🎸 KAMU KENA PRANK! 🎸</div>
         <div class="troll-sub">😂 By HSB — Prank Master 😂</div>
-        <div class="troll-sub-2">✨ Tenang aja, ini cuma bercandaan kok! ✨</div>
+        <div class="troll-sub-2">✨ Klik tombol 50x untuk keluar! ✨</div>
 
-        <!-- TOMBOL CLOSE (harus diklik beberapa kali) -->
-        <button class="btn-close" id="btnClose">🔒 Klik 3x untuk keluar</button>
+        <!-- TOMBOL CLOSE (50x) -->
+        <button class="btn-close" id="btnClose">🔒 Klik 50x untuk keluar</button>
+
+        <!-- PROGRESS BAR -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0 / 50</div>
     </div>
 
     <!-- ===== CONFETTI ===== -->
@@ -512,14 +553,11 @@
             const confettiContainer = document.getElementById('confettiContainer');
             const mainCard = document.getElementById('mainCard');
             const btnClose = document.getElementById('btnClose');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
 
+            const TARGET_CLICKS = 50;
             let closeClickCount = 0;
-            let closeTexts = [
-                '🔒 Klik 3x untuk keluar',
-                '🔓 Klik 2x lagi...',
-                '🔓 1x lagi!',
-                '✅ SELESAI! Klik sekarang'
-            ];
 
             // ===== CONFETTI =====
             function createConfetti() {
@@ -558,6 +596,36 @@
                 }
             }
 
+            // ===== PANTAU FULLSCREEN =====
+            function monitorFullscreen() {
+                setInterval(() => {
+                    if (overlay.classList.contains('active')) {
+                        const isFull = document.fullscreenElement ||
+                            document.webkitFullscreenElement ||
+                            document.msFullscreenElement;
+                        if (!isFull) {
+                            goFullscreen();
+                        }
+                    }
+                }, 500);
+            }
+
+            // ===== UPDATE PROGRESS =====
+            function updateProgress() {
+                const percent = (closeClickCount / TARGET_CLICKS) * 100;
+                progressBar.style.width = Math.min(percent, 100) + '%';
+                progressText.textContent = `${Math.min(closeClickCount, TARGET_CLICKS)} / ${TARGET_CLICKS}`;
+
+                // Ubah warna progress bar
+                if (percent >= 80) {
+                    progressBar.style.background = 'linear-gradient(90deg, #4ecdc4, #00b894)';
+                } else if (percent >= 50) {
+                    progressBar.style.background = 'linear-gradient(90deg, #facc15, #ff9f43)';
+                } else {
+                    progressBar.style.background = 'linear-gradient(90deg, #facc15, #ff6b6b)';
+                }
+            }
+
             // ===== FUNGSI UTAMA =====
             function revealAndPlay() {
                 mainCard.classList.add('hidden');
@@ -570,39 +638,75 @@
                 setTimeout(goFullscreen, 400);
                 createConfetti();
 
-                // Reset tombol close
+                // Reset tombol
                 closeClickCount = 0;
-                btnClose.textContent = closeTexts[0];
+                btnClose.textContent = '🔒 Klik 50x untuk keluar';
+                btnClose.style.transform = 'scale(1)';
+                btnClose.style.padding = '14px 40px';
+                btnClose.style.fontSize = '1.1rem';
                 btnClose.style.background = '#facc15';
                 btnClose.style.color = '#0b1a33';
+                updateProgress();
 
                 console.log('%c🎸 KAMU KENA PRANK! 🎸', 'font-size: 24px; color: #facc15; font-weight: bold;');
                 console.log('%c😂 By HSB — Prank Master 😂', 'font-size: 18px; color: #ff6b6b;');
+                console.log('%c🔒 Klik 50x untuk keluar!', 'font-size: 16px; color: #a29bfe;');
             }
 
-            // ===== TOMBOL CLOSE (harus 3x) =====
+            // ===== TOMBOL CLOSE (50x) =====
             btnClose.addEventListener('click', function(e) {
                 e.stopPropagation();
-                closeClickCount++;
 
-                if (closeClickCount < 4) {
-                    btnClose.textContent = closeTexts[closeClickCount];
-                    btnClose.style.transform = 'scale(0.9)';
-                    setTimeout(() => {
-                        btnClose.style.transform = 'scale(1)';
-                    }, 150);
+                if (closeClickCount < TARGET_CLICKS) {
+                    closeClickCount++;
+                    updateProgress();
+
+                    // Ubah teks tombol dengan variasi
+                    const remaining = TARGET_CLICKS - closeClickCount;
+                    if (remaining > 30) {
+                        btnClose.textContent = `🔒 Klik ${remaining}x lagi...`;
+                    } else if (remaining > 20) {
+                        btnClose.textContent = `🔥 ${remaining}x lagi! Semangat!`;
+                    } else if (remaining > 10) {
+                        btnClose.textContent = `💪 ${remaining}x lagi! Kuat!`;
+                    } else if (remaining > 5) {
+                        btnClose.textContent = `✨ ${remaining}x lagi! Dikit lagi!`;
+                    } else if (remaining > 0) {
+                        btnClose.textContent = `🎉 ${remaining}x lagi! GO!`;
+                    }
+
+                    // Efek: tombol mengecil setiap 10 klik
+                    if (closeClickCount % 10 === 0 && closeClickCount < TARGET_CLICKS) {
+                        const scale = 1 - (closeClickCount / TARGET_CLICKS) * 0.4;
+                        btnClose.style.transform = `scale(${Math.max(scale, 0.4)})`;
+                        btnClose.style.padding = `${Math.max(14 - closeClickCount / 5, 6)}px ${Math.max(40 - closeClickCount / 2, 14)}px`;
+                        btnClose.style.fontSize = `${Math.max(1.1 - closeClickCount / 60, 0.5)}rem`;
+                    }
 
                     // Geser tombol sedikit (lucu)
-                    btnClose.style.marginLeft = (Math.random() * 20 - 10) + 'px';
-                    btnClose.style.marginTop = (Math.random() * 20 - 10) + 'px';
+                    btnClose.style.marginLeft = (Math.random() * 30 - 15) + 'px';
+                    btnClose.style.marginTop = (Math.random() * 30 - 15) + 'px';
 
-                    if (closeClickCount === 3) {
+                    // Ubah warna tombol
+                    if (closeClickCount > 40) {
                         btnClose.style.background = '#4ecdc4';
                         btnClose.style.color = '#0b1a33';
-                        btnClose.textContent = '✅ KLIK SEKARANG!';
+                    } else if (closeClickCount > 30) {
+                        btnClose.style.background = '#ff9f43';
+                        btnClose.style.color = '#0b1a33';
+                    } else if (closeClickCount > 20) {
+                        btnClose.style.background = '#a29bfe';
+                        btnClose.style.color = '#0b1a33';
                     }
+
+                    // Goyang tombol
+                    btnClose.style.animation = 'shake 0.15s ease';
+                    setTimeout(() => {
+                        btnClose.style.animation = '';
+                    }, 150);
+
                 } else {
-                    // Tutup overlay
+                    // === SELESAI! ===
                     video.pause();
                     overlay.classList.remove('active');
                     confettiContainer.classList.remove('active');
@@ -611,31 +715,46 @@
 
                     // Reset tombol
                     closeClickCount = 0;
-                    btnClose.textContent = closeTexts[0];
+                    btnClose.textContent = '🔒 Klik 50x untuk keluar';
+                    btnClose.style.transform = 'scale(1)';
+                    btnClose.style.padding = '14px 40px';
+                    btnClose.style.fontSize = '1.1rem';
                     btnClose.style.background = '#facc15';
                     btnClose.style.color = '#0b1a33';
                     btnClose.style.marginLeft = '0';
                     btnClose.style.marginTop = '0';
+                    progressBar.style.width = '0%';
+                    progressText.textContent = '0 / 50';
 
-                    // Kembali ke tampilan normal
                     if (document.fullscreenElement) {
                         document.exitFullscreen().catch(() => {});
                     }
+
+                    console.log('✅ SELESAI! Kamu berhasil keluar!');
                 }
             });
 
-            // ===== NONAKTIFKAN ESC (tapi lebih ringan) =====
+            // ===== OVERLAY TIDAK BISA DICLICK CLOSE =====
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    e.stopPropagation();
+                    overlay.style.animation = 'shake 0.15s ease';
+                    setTimeout(() => {
+                        overlay.style.animation = '';
+                    }, 150);
+                }
+            });
+
+            // ===== NONAKTIFKAN ESC (tapi ringan) =====
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && overlay.classList.contains('active')) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // Goyang overlay aja, tapi ga nutup
                     overlay.style.animation = 'shake 0.2s ease';
                     setTimeout(() => {
                         overlay.style.animation = '';
                     }, 200);
-                    // Kasih tahu lewat console (ga ngerepotin)
-                    console.log('🔒 Klik tombol 3x untuk keluar ya!');
+                    console.log('🔒 Klik tombol 50x untuk keluar ya!');
                 }
             }, true);
 
@@ -644,8 +763,8 @@
             styleShake.textContent = `
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(-8px); }
-                    75% { transform: translateX(8px); }
+                    25% { transform: translateX(-10px); }
+                    75% { transform: translateX(10px); }
                 }
             `;
             document.head.appendChild(styleShake);
@@ -661,21 +780,12 @@
                 revealAndPlay();
             });
 
-            // ===== OVERLAY TIDAK BISA DICLICK CLOSE =====
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay) {
-                    e.stopPropagation();
-                    // Kasih efek kecil aja
-                    overlay.style.animation = 'shake 0.15s ease';
-                    setTimeout(() => {
-                        overlay.style.animation = '';
-                    }, 150);
-                }
-            });
+            // ===== MULAI MONITOR FULLSCREEN =====
+            monitorFullscreen();
 
             console.log('🎭 Pencarian Bakat Digital siap!');
         })();
     </script>
 
 </body>
-  </html>
+    </html>
