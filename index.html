@@ -1,810 +1,348 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rig Animasi 2D — Jalan · Napas · Lompat</title>
-<style>
-  :root{
-    --bg:#15161a;
-    --panel:#1d1f26;
-    --panel2:#23262f;
-    --line:#33353f;
-    --accent:#ffb648;
-    --accent2:#5ec8c1;
-    --danger:#e8604c;
-    --text:#e9e8e3;
-    --dim:#8b8d97;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    display:flex;
-    min-height:100vh;
-    flex-wrap:wrap;
-  }
-  h1{
-    font-size:15px;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    margin:0 0 14px;
-    color:var(--accent);
-    font-weight:700;
-  }
-  h2{
-    font-size:11px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--dim);
-    margin:18px 0 8px;
-    border-top:1px solid var(--line);
-    padding-top:14px;
-  }
-  /* ---------- Panel kiri: stage ---------- */
-  .stage-col{
-    flex:1 1 520px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
-    min-height:100vh;
-  }
-  #stageWrap{
-    position:relative;
-    width:520px;
-    max-width:100%;
-    height:600px;
-    background:
-      radial-gradient(ellipse at 50% 88%, rgba(255,182,72,.08), transparent 60%),
-      linear-gradient(180deg,#191a20 0%, #131318 100%);
-    border:1px solid var(--line);
-    border-radius:6px;
-    overflow:hidden;
-  }
-  #ground{
-    position:absolute;
-    left:0;right:0;
-    height:2px;
-    background:linear-gradient(90deg, transparent, #3a3d49, transparent);
-  }
-  #stage{
-    position:absolute;
-    left:0; top:0;
-    width:100%; height:100%;
-  }
-  .limb{
-    position:absolute;
-    transform-origin:50% 0%;
-  }
-  .limb > img{
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    display:block;
-    pointer-events:none;
-    -webkit-user-drag:none;
-    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));
-  }
-  .limb.empty{
-    background:repeating-linear-gradient(45deg,#2a2c34,#2a2c34 6px,#25262d 6px,#25262d 12px);
-    border:1px dashed #454857;
-    border-radius:6px;
-  }
-  .limb.empty::after{
-    content:attr(data-label);
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    font-size:9px;
-    color:#6d6f7a;
-    padding:2px;
-    line-height:1.2;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📥 Video Downloader · Google Drive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(145deg, #0b0e1a, #141a2b);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #f0f4ff;
+        }
+        .card {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(22, 28, 48, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 40px 16px 40px 16px;
+            padding: 40px 36px 36px;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+            transition: 0.2s;
+            animation: fadeUp 0.6s ease;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 22px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.15);
+            padding-bottom: 18px;
+        }
+        .header .icon {
+            font-size: 2.8rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.4));
+        }
+        .header h1 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #facc15, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .header span {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #9aa4bf;
+            display: block;
+            margin-top: 2px;
+        }
 
-  .transport{
-    display:flex;
-    gap:8px;
-    margin-top:18px;
-    flex-wrap:wrap;
-    justify-content:center;
-  }
-  button.mode{
-    background:var(--panel2);
-    border:1px solid var(--line);
-    color:var(--text);
-    padding:9px 16px;
-    border-radius:20px;
-    font-size:13px;
-    cursor:pointer;
-    transition:.15s;
-  }
-  button.mode:hover{border-color:var(--accent);}
-  button.mode.active{
-    background:var(--accent);
-    color:#1a1a1a;
-    border-color:var(--accent);
-    font-weight:600;
-  }
-  button.jump-btn{
-    background:var(--accent2);
-    color:#0e2422;
-    border:none;
-    font-weight:600;
-  }
-  .speed-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-top:14px;
-    font-size:12px;
-    color:var(--dim);
-  }
-  .speed-row input{width:160px;}
-  .hint{
-    margin-top:14px;
-    font-size:12px;
-    color:var(--dim);
-    max-width:480px;
-    text-align:center;
-    line-height:1.5;
-  }
-  .download-row{
-    display:flex;
-    gap:8px;
-    margin-top:16px;
-    flex-wrap:wrap;
-    justify-content:center;
-  }
-  button.dl{
-    background:var(--panel2);
-    border:1px solid var(--accent2);
-    color:var(--accent2);
-    padding:8px 14px;
-    border-radius:6px;
-    font-size:12.5px;
-    cursor:pointer;
-    font-weight:600;
-  }
-  button.dl:hover{background:rgba(94,200,193,.12);}
-  button.dl.recording{
-    background:var(--danger);
-    border-color:var(--danger);
-    color:#fff;
-    animation:pulse 1s infinite;
-  }
-  @keyframes pulse{50%{opacity:.6;}}
-  #recStatus{font-size:11.5px;color:var(--dim);margin-top:6px;text-align:center;}
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #c8d0e6;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        .input-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .input-row input {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 2px solid #2a3450;
+            background: #0f1425;
+            color: #f0f4ff;
+            font-size: 1rem;
+            transition: 0.2s;
+            outline: none;
+        }
+        .input-row input:focus {
+            border-color: #facc15;
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.2);
+        }
+        .input-row input::placeholder {
+            color: #6a7a9a;
+        }
 
-  /* ---------- Panel kanan: kontrol upload ---------- */
-  .control-col{
-    flex:0 0 380px;
-    max-width:100%;
-    background:var(--panel);
-    border-left:1px solid var(--line);
-    padding:22px;
-    max-height:100vh;
-    overflow-y:auto;
-  }
-  .part-card{
-    background:var(--panel2);
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:10px 12px;
-    margin-bottom:8px;
-  }
-  .part-card.sub{
-    margin-left:14px;
-    border-left:2px solid var(--accent2);
-  }
-  .part-head{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .thumb{
-    width:34px;height:34px;
-    border-radius:6px;
-    background:#1a1b20;
-    border:1px solid var(--line);
-    object-fit:cover;
-    flex:none;
-  }
-  .part-name{
-    font-size:12.5px;
-    font-weight:600;
-    flex:1;
-  }
-  .part-sub{
-    font-size:10.5px;
-    color:var(--dim);
-    display:block;
-    font-weight:400;
-    margin-top:1px;
-  }
-  label.upload-btn{
-    font-size:11px;
-    background:#31333d;
-    border:1px solid var(--line);
-    padding:6px 10px;
-    border-radius:5px;
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  label.upload-btn:hover{border-color:var(--accent);}
-  .part-card input[type=file]{display:none;}
-  .dims{
-    display:flex;
-    gap:10px;
-    margin-top:8px;
-  }
-  .dims div{flex:1;}
-  .dims label{
-    font-size:9.5px;
-    color:var(--dim);
-    text-transform:uppercase;
-    letter-spacing:.05em;
-  }
-  .dims input[type=range]{width:100%;}
-  .offset-row{
-    display:flex;
-    gap:10px;
-  }
-  .offset-row > div{flex:1;}
-  small.val{color:var(--accent);font-weight:600;}
-  .reset-link{
-    font-size:11px;
-    color:var(--dim);
-    text-decoration:underline;
-    cursor:pointer;
-    background:none;
-    border:none;
-    padding:0;
-  }
-  ::-webkit-scrollbar{width:8px;}
-  ::-webkit-scrollbar-thumb{background:#3a3c46;border-radius:4px;}
-</style>
+        .btn-download {
+            padding: 14px 32px;
+            border-radius: 60px;
+            border: none;
+            background: linear-gradient(135deg, #facc15, #f59e0b);
+            color: #0b0e1a;
+            font-weight: 800;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 0 #7a4d00;
+            flex-shrink: 0;
+        }
+        .btn-download:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 0 #7a4d00;
+            background: #ffe066;
+        }
+        .btn-download:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #7a4d00;
+        }
+        .btn-download:disabled {
+            opacity: 0.6;
+            transform: translateY(0);
+            box-shadow: 0 4px 0 #7a4d00;
+            cursor: not-allowed;
+        }
+
+        .status-box {
+            margin-top: 20px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border-left: 4px solid #facc15;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            min-height: 60px;
+            word-break: break-all;
+        }
+        .status-box .loading {
+            color: #facc15;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+        .status-box .error {
+            color: #ff6b6b;
+        }
+        .status-box .success {
+            color: #4ecdc4;
+        }
+        .status-box a {
+            color: #facc15;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .status-box a:hover {
+            text-decoration: underline;
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #9aa4bf;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .info-box strong {
+            color: #facc15;
+        }
+        .info-box .highlight {
+            color: #ff9f43;
+        }
+
+        @media (max-width: 550px) {
+            .card {
+                padding: 24px 16px;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            .header .icon {
+                font-size: 2rem;
+            }
+            .input-row {
+                flex-direction: column;
+            }
+            .btn-download {
+                width: 100%;
+                justify-content: center;
+                padding: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="stage-col">
-  <h1>🧩 Rig Animasi 2D</h1>
-  <div id="stageWrap">
-    <div id="ground"></div>
-    <div id="stage"></div>
-  </div>
+    <div class="card">
+        <div class="header">
+            <div class="icon">📥</div>
+            <div>
+                <h1>Video Downloader</h1>
+                <span>Simpan video langsung ke Google Drive</span>
+            </div>
+        </div>
 
-  <div class="transport">
-    <button class="mode active" data-mode="idle">🌬️ Diam / Napas</button>
-    <button class="mode" data-mode="walk">🚶 Jalan</button>
-    <button class="mode jump-btn" id="jumpBtn">⬆️ Lompat</button>
-  </div>
+        <div class="form-group">
+            <label for="urlInput">🔗 Masukkan link video (mp4, mov, dll.)</label>
+            <div class="input-row">
+                <input
+                type="url"
+                id="urlInput"
+                placeholder="https://contoh.com/video.mp4"
+                autofocus
+                />
+                <button class="btn-download" id="downloadBtn">⬇ Download</button>
+            </div>
+        </div>
 
-  <div class="speed-row">
-    <span>Kecepatan</span>
-    <input type="range" id="speed" min="0.3" max="2.5" step="0.05" value="1">
-    <span id="speedVal">1.0x</span>
-  </div>
+        <div class="status-box" id="statusBox">
+            💡 Tempel link video lalu klik Download
+        </div>
 
-  <div class="download-row">
-    <button class="dl" id="recBtn">🔴 Rekam Video (WebM)</button>
-    <button class="dl" id="pngBtn">📷 Unduh Pose Saat Ini (PNG)</button>
-  </div>
-  <div id="recStatus"></div>
-
-  <div class="hint">
-    Upload tiap bagian tubuh di panel kanan. Atur ukuran & jarak sambungan sampai pas, pilih mode animasi,
-    lalu tekan <b>Rekam Video</b> — akan merekam animasi yang sedang berjalan dan otomatis mengunduh file .webm saat kamu tekan stop.
-  </div>
-</div>
-
-<div class="control-col">
-  <h2>Bagian Tubuh</h2>
-  <div id="partsList"></div>
-
-  <h2>Kalibrasi Sambungan</h2>
-  <div class="offset-row">
-    <div>
-      <label>Jarak Bahu <small class="val" id="shV">45</small>px</label>
-      <input type="range" id="shoulderOff" min="15" max="90" value="45">
+        <div class="info-box">
+            <strong>📌 Catatan:</strong> Hanya mendukung <span class="highlight">link video langsung</span> (.mp4, .mov, .webm, dll.).
+            <br>Ukuran maksimal <strong>50MB</strong> (batas Apps Script).
+            <br>Video akan disimpan ke Google Drive Anda.
+        </div>
     </div>
-    <div>
-      <label>Jarak Pinggul <small class="val" id="hipV">32</small>px</label>
-      <input type="range" id="hipOff" min="10" max="80" value="32">
-    </div>
-  </div>
-  <div class="offset-row" style="margin-top:8px;">
-    <div>
-      <label>Posisi Vertikal Badan <small class="val" id="tyV">38</small>%</label>
-      <input type="range" id="torsoY" min="20" max="55" value="38">
-    </div>
-    <div>
-      <label>Skala Semua <small class="val" id="scV">100</small>%</label>
-      <input type="range" id="globalScale" min="50" max="160" value="100">
-    </div>
-  </div>
 
-  <button class="reset-link" id="resetAll" style="margin-top:16px;">↺ Reset semua gambar & ukuran</button>
-</div>
+    <script>
+        (function() {
+            // ===== KONFIGURASI =====
+            // URL Web App Anda (sudah disesuaikan)
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwVSboL1Cn6KBun_g1R5ccTLmBx_HnSF85MrJEVBQ6f0G4L3UOmYjjjy6FhozvqrnLB1A/exec';
 
-<canvas id="recCanvas" width="520" height="600" style="display:none;"></canvas>
+            const urlInput = document.getElementById('urlInput');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const statusBox = document.getElementById('statusBox');
 
-<script>
-/* ================= Data bagian tubuh ================= */
-// parent: null berarti akar (badan). origin: titik jangkar pada dirinya sendiri yang ditempel ke titik attach parent.
-const PARTS = [
-  { id:'torso',      label:'Badan (torso)',            sub:'akar rig',                          w:130, h:190, parent:null },
-  { id:'head',       label:'Kepala',                   sub:'sudah termasuk wajah & rambut',      w:88,  h:96,  parent:'torso',     origin:'bottomcenter' },
-  { id:'upperArmL',  label:'Lengan Atas Kiri',         sub:'bahu → siku',                        w:36,  h:88,  parent:'torso',     origin:'topcenter' },
-  { id:'lowerArmL',  label:'Lengan Bawah Kiri',        sub:'siku → pergelangan',                 w:32,  h:80,  parent:'upperArmL', origin:'topcenter' },
-  { id:'handL',      label:'Tangan Kiri',              sub:'telapak + jari-jari',                w:26,  h:34,  parent:'lowerArmL', origin:'topcenter' },
-  { id:'upperArmR',  label:'Lengan Atas Kanan',        sub:'bahu → siku',                        w:36,  h:88,  parent:'torso',     origin:'topcenter' },
-  { id:'lowerArmR',  label:'Lengan Bawah Kanan',       sub:'siku → pergelangan',                 w:32,  h:80,  parent:'upperArmR', origin:'topcenter' },
-  { id:'handR',      label:'Tangan Kanan',             sub:'telapak + jari-jari',                w:26,  h:34,  parent:'lowerArmR', origin:'topcenter' },
-  { id:'upperLegL',  label:'Kaki Atas Kiri',           sub:'pinggul → lutut',                    w:50,  h:105, parent:'torso',     origin:'topcenter' },
-  { id:'lowerLegL',  label:'Kaki Bawah Kiri',          sub:'lutut → kaki',                       w:44,  h:105, parent:'upperLegL', origin:'topcenter' },
-  { id:'upperLegR',  label:'Kaki Atas Kanan',          sub:'pinggul → lutut',                    w:50,  h:105, parent:'torso',     origin:'topcenter' },
-  { id:'lowerLegR',  label:'Kaki Bawah Kanan',         sub:'lutut → kaki',                       w:44,  h:105, parent:'upperLegR', origin:'topcenter' },
-];
-const byId = Object.fromEntries(PARTS.map(p=>[p.id,p]));
-const childrenOf = {};
-PARTS.forEach(p=>{ if(p.parent){ (childrenOf[p.parent] ||= []).push(p.id); } });
+            // ===== FUNGSI =====
+            function setStatus(html, type = 'info') {
+                statusBox.innerHTML = html;
+                statusBox.className = 'status-box ' + type;
+            }
 
-/* ================= Build DOM ================= */
-const stage = document.getElementById('stage');
-const elMap = {};
+            function getFileNameFromUrl(url) {
+                try {
+                    const u = new URL(url);
+                    const path = u.pathname;
+                    const parts = path.split('/');
+                    let file = parts[parts.length - 1] || 'video';
+                    if (!file.includes('.')) file += '.mp4';
+                    return file;
+                } catch {
+                    return 'video_' + Date.now() + '.mp4';
+                }
+            }
 
-// Urutan tumpuk (belakang -> depan) supaya menghadap depan tidak ada bagian yang "nembus" aneh:
-// kaki paling belakang, badan, lengan di depan badan, kepala paling depan.
-const TORSO_PAINT_ORDER = ['upperLegL','upperLegR','upperArmL','upperArmR','head'];
+            async function handleDownload() {
+                let url = urlInput.value.trim();
+                if (!url) {
+                    setStatus('📛 Masukkan URL video terlebih dahulu.', 'error');
+                    return;
+                }
 
-function buildDom(){
-  stage.innerHTML='';
-  const torsoDiv = makeLimbDiv(byId.torso);
-  stage.appendChild(torsoDiv);
-  elMap.torso = torsoDiv;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
 
-  // anak langsung dari torso dipasang sesuai TORSO_PAINT_ORDER (bukan urutan di PARTS)
-  TORSO_PAINT_ORDER.forEach(id=>{
-    const div = makeLimbDiv(byId[id]);
-    elMap.torso.appendChild(div);
-    elMap[id]=div;
-  });
-  // sisanya (lowerArm/hand/lowerLeg) ikut urutan alami PARTS, ditempel ke parent masing-masing
-  PARTS.forEach(p=>{
-    if(p.id==='torso' || TORSO_PAINT_ORDER.includes(p.id)) return;
-    const div = makeLimbDiv(p);
-    elMap[p.parent].appendChild(div);
-    elMap[p.id]=div;
-  });
-}
-function makeLimbDiv(p){
-  const d=document.createElement('div');
-  d.className='limb empty';
-  d.dataset.id=p.id;
-  d.setAttribute('data-label', p.label);
-  const img=document.createElement('img');
-  img.style.display='none';
-  d.appendChild(img);
-  return d;
-}
-buildDom();
+                const fileName = getFileNameFromUrl(url);
 
-/* ================= Layout (posisi & ukuran) ================= */
-let shoulderOff=45, hipOff=32, torsoYpct=38, globalScale=1;
-// layoutData menyimpan koordinat lokal (relatif ke parent) tiap part, dipakai ulang oleh canvas recorder
-const layoutData = {};
+                downloadBtn.disabled = true;
+                downloadBtn.textContent = '⏳ Mengunduh...';
+                setStatus('⏳ Mengirim permintaan ke server... <span class="loading">●</span>', 'loading');
 
-function layout(){
-  const stageW = stage.clientWidth, stageH = stage.clientHeight;
-  const t = byId.torso;
-  const tw = t.w*globalScale, th = t.h*globalScale;
+                try {
+                    const payload = { videoUrl: url, fileName: fileName };
 
-  layoutData.torso = { x: stageW*0.5, y: stageH*(torsoYpct/100), w:tw, h:th, origin:'centercenter' };
-  setBox(elMap.torso, tw, th, layoutData.torso.x, layoutData.torso.y);
-  elMap.torso.style.transform = `translate(-50%,-50%)`;
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
 
-  layoutChild('head', 0.5*tw, 0);
-  layoutChild('upperArmL', 0.5*tw - shoulderOff*globalScale, tw*0.06);
-  layoutChild('upperArmR', 0.5*tw + shoulderOff*globalScale, tw*0.06);
-  layoutChild('upperLegL', 0.5*tw - hipOff*globalScale, th);
-  layoutChild('upperLegR', 0.5*tw + hipOff*globalScale, th);
+                    const result = await response.json();
 
-  layoutNested('lowerArmL','upperArmL');
-  layoutNested('lowerArmR','upperArmR');
-  layoutNested('lowerLegL','upperLegL');
-  layoutNested('lowerLegR','upperLegR');
-  layoutNested('handL','lowerArmL');
-  layoutNested('handR','lowerArmR');
-}
-function layoutChild(id, x, y){
-  const p = byId[id];
-  const w = p.w*globalScale, h = p.h*globalScale;
-  layoutData[id] = { x, y, w, h, origin:p.origin };
-  setBox(elMap[id], w, h, x, y);
-  elMap[id].style.transform = originTranslate(p.origin);
-}
-function layoutNested(id, parentId){
-  const p = byId[id], pp = byId[parentId];
-  const pw = pp.w*globalScale, ph = pp.h*globalScale;
-  const w = p.w*globalScale, h = p.h*globalScale;
-  layoutData[id] = { x: pw*0.5, y: ph, w, h, origin:p.origin };
-  setBox(elMap[id], w, h, pw*0.5, ph);
-  elMap[id].style.transform = originTranslate(p.origin);
-}
-function setBox(el,w,h,x,y){
-  el.style.width=w+'px';
-  el.style.height=h+'px';
-  el.style.left=x+'px';
-  el.style.top=y+'px';
-}
-function originTranslate(origin){
-  if(origin==='bottomcenter') return 'translate(-50%,-100%)';
-  return 'translate(-50%,0%)';
-}
-layout();
-window.addEventListener('resize', layout);
+                    if (result.status === 'success') {
+                        const data = result.data;
+                        setStatus(`
+                            ✅ <span class="success">Video berhasil diunduh!</span><br>
+                            📁 Nama file: <strong>${data.fileName}</strong><br>
+                            📦 Ukuran: <strong>${data.size}</strong><br>
+                            🔗 <a href="${data.fileUrl}" target="_blank">Buka di Google Drive</a>
+                        `, 'success');
+                    } else {
+                        setStatus(`❌ <span class="error">${result.message || 'Gagal mengunduh video.'}</span>`, 'error');
+                    }
 
-/* ================= Panel kontrol (upload + ukuran) ================= */
-const list = document.getElementById('partsList');
-PARTS.forEach(p=>{
-  const card=document.createElement('div');
-  card.className='part-card' + (p.id.startsWith('hand') ? ' sub' : '');
-  card.innerHTML = `
-    <div class="part-head">
-      <img class="thumb" id="thumb-${p.id}" src="" style="display:none;">
-      <div class="part-name">${p.label}<span class="part-sub">${p.sub}</span></div>
-      <label class="upload-btn">Upload
-        <input type="file" accept="image/*" id="file-${p.id}">
-      </label>
-    </div>
-    <div class="dims">
-      <div>
-        <label>Lebar <small class="val" id="w-${p.id}-v">${p.w}</small>px</label>
-        <input type="range" min="10" max="220" value="${p.w}" id="w-${p.id}">
-      </div>
-      <div>
-        <label>Tinggi <small class="val" id="h-${p.id}-v">${p.h}</small>px</label>
-        <input type="range" min="10" max="260" value="${p.h}" id="h-${p.id}">
-      </div>
-    </div>
-  `;
-  list.appendChild(card);
+                } catch (err) {
+                    setStatus(`❌ <span class="error">Terjadi kesalahan: ${err.message}</span>`, 'error');
+                }
 
-  document.getElementById(`file-${p.id}`).addEventListener('change', e=>{
-    const f=e.target.files[0];
-    if(!f) return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const img = elMap[p.id].querySelector('img');
-      img.src = ev.target.result;
-      img.style.display='block';
-      elMap[p.id].classList.remove('empty');
-      document.getElementById(`thumb-${p.id}`).src = ev.target.result;
-      document.getElementById(`thumb-${p.id}`).style.display='block';
-    };
-    reader.readAsDataURL(f);
-  });
-  document.getElementById(`w-${p.id}`).addEventListener('input', e=>{
-    p.w = +e.target.value;
-    document.getElementById(`w-${p.id}-v`).textContent = p.w;
-    layout();
-  });
-  document.getElementById(`h-${p.id}`).addEventListener('input', e=>{
-    p.h = +e.target.value;
-    document.getElementById(`h-${p.id}-v`).textContent = p.h;
-    layout();
-  });
-});
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = '⬇ Download';
+            }
 
-document.getElementById('shoulderOff').addEventListener('input', e=>{
-  shoulderOff=+e.target.value; document.getElementById('shV').textContent=shoulderOff; layout();
-});
-document.getElementById('hipOff').addEventListener('input', e=>{
-  hipOff=+e.target.value; document.getElementById('hipV').textContent=hipOff; layout();
-});
-document.getElementById('torsoY').addEventListener('input', e=>{
-  torsoYpct=+e.target.value; document.getElementById('tyV').textContent=torsoYpct; layout();
-});
-document.getElementById('globalScale').addEventListener('input', e=>{
-  globalScale=(+e.target.value)/100; document.getElementById('scV').textContent=e.target.value; layout();
-});
-document.getElementById('resetAll').addEventListener('click', ()=>{
-  if(!confirm('Hapus semua gambar & kembalikan ukuran default?')) return;
-  location.reload();
-});
+            // ===== EVENT =====
+            downloadBtn.addEventListener('click', handleDownload);
 
-/* ================= Animasi (pose = sudut rotasi tiap sendi, derajat) ================= */
-let mode='idle';
-let speed=1;
-let jumpAnim=null;
+            urlInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleDownload();
+                }
+            });
 
-document.querySelectorAll('button.mode').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    document.querySelectorAll('button.mode').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    mode=b.dataset.mode;
-  });
-});
-document.getElementById('jumpBtn').addEventListener('click', ()=>{
-  jumpAnim={start: performance.now()};
-});
-document.getElementById('speed').addEventListener('input', e=>{
-  speed=+e.target.value;
-  document.getElementById('speedVal').textContent = speed.toFixed(2)+'x';
-});
+            console.log('🚀 Video Downloader siap! Web App terhubung.');
+        })();
+    </script>
 
-// Batas aman tiap sendi (derajat) — mencegah lengan/kaki berputar sampai nembus/ke arah tidak wajar
-const JOINT_LIMITS = {
-  head:[-15,15], torsoRot:[-8,8],
-  uArmL:[-38,38], lArmL:[0,75], handL:[-25,40],
-  uArmR:[-38,38], lArmR:[0,75], handR:[-25,40],
-  uLegL:[-38,38], lLegL:[-78,0],
-  uLegR:[-38,38], lLegR:[-78,0],
-};
-function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-function clampPose(pose){
-  const out = {...pose};
-  for(const key in JOINT_LIMITS){
-    if(key in out){
-      const [mn,mx] = JOINT_LIMITS[key];
-      out[key] = clamp(out[key], mn, mx);
-    }
-  }
-  return out;
-}
-
-function applyPose(rawPose){
-  const pose = clampPose(rawPose);
-  elMap.torso.style.transform =
-    `translate(-50%,-50%) translate(${pose.torsoX}px,${pose.torsoRotY}px) rotate(${pose.torsoRot}deg) scaleY(${pose.torsoScaleY})`;
-
-  setRot('head', pose.head, 'bottomcenter');
-  setRot('upperArmL', pose.uArmL, 'topcenter');
-  setRot('lowerArmL', pose.lArmL, 'topcenter');
-  setRot('handL', pose.handL, 'topcenter');
-  setRot('upperArmR', pose.uArmR, 'topcenter');
-  setRot('lowerArmR', pose.lArmR, 'topcenter');
-  setRot('handR', pose.handR, 'topcenter');
-  setRot('upperLegL', pose.uLegL, 'topcenter');
-  setRot('lowerLegL', pose.lLegL, 'topcenter');
-  setRot('upperLegR', pose.uLegR, 'topcenter');
-  setRot('lowerLegR', pose.lLegR, 'topcenter');
-}
-function setRot(id, deg, origin){
-  elMap[id].style.transform = `${originTranslate(origin)} rotate(${deg}deg)`;
-}
-
-// kurva "jalan" yang tidak murni sinus supaya ada kesan contact/lift (lebih natural dari sin biasa)
-function walkCurve(x){
-  return Math.sin(x) + 0.15*Math.sin(2*x);
-}
-
-function poseIdle(t){
-  const s = Math.sin(t*2.1);
-  const armSway = Math.sin(t*1.15);
-  return {
-    torsoX: 0.6*Math.sin(t*0.7),
-    torsoRotY: -Math.abs(Math.sin(t*2.1))*1.6,
-    torsoRot: 0.6*Math.sin(t*0.9),
-    torsoScaleY: 1 + 0.018*s,
-    head: 2*Math.sin(t*1.3) + 0.5*Math.sin(t*0.6),
-    uArmL: 4*armSway, lArmL: 4+4*armSway, handL: 3+3*armSway,
-    uArmR: -4*armSway, lArmR: 4-4*armSway, handR: 3-3*armSway,
-    uLegL:0, lLegL:0, uLegR:0, lLegR:0,
-  };
-}
-
-function poseWalk(t){
-  const ph = t*2*Math.PI*1.05;
-  const legL = walkCurve(ph), legR = walkCurve(ph+Math.PI);
-  const uLegL = 26*legL;
-  const uLegR = 26*legR;
-  // lutut menekuk saat kaki terangkat (fase ayun), lurus saat menapak
-  const lLegL = -30*Math.max(0, Math.sin(ph+Math.PI*0.55));
-  const lLegR = -30*Math.max(0, Math.sin(ph+Math.PI*0.55+Math.PI));
-  const uArmL = -22*legR*0.9;
-  const uArmR = -22*legL*0.9;
-  const lArmL = 10+12*Math.max(0,Math.sin(ph+Math.PI));
-  const lArmR = 10+12*Math.max(0,Math.sin(ph));
-  return {
-    torsoX: 2.2*Math.sin(ph),
-    torsoRotY: -Math.abs(Math.sin(ph))*7.5,
-    torsoRot: 3*Math.sin(ph),
-    torsoScaleY: 1,
-    head: -1.8*Math.sin(ph) - 0.4*Math.sin(ph*2),
-    uArmL, lArmL, handL: lArmL*0.5 + 6*Math.sin(ph+Math.PI-0.4),
-    uArmR, lArmR, handR: lArmR*0.5 + 6*Math.sin(ph-0.4),
-    uLegL, lLegL, uLegR, lLegR,
-  };
-}
-
-function easeOutCubic(x){ return 1-Math.pow(1-x,3); }
-function easeInCubic(x){ return x*x*x; }
-
-function poseJump(elapsedMs){
-  const dur = 900/speed;
-  const p = Math.min(1, elapsedMs/dur);
-  let y=0, uLeg=0, lLeg=0, uArm=0, torsoScale=1, torsoRot=0;
-
-  if(p<0.18){
-    const k=p/0.18;
-    y = 10*k; torsoScale = 1-0.06*k;
-    uLeg = 20*k; lLeg=-30*k; uArm=-20*k;
-  } else if(p<0.6){
-    const k=(p-0.18)/0.42;
-    y = 10 - (10+70*easeOutCubic(k));
-    torsoScale = 0.94+0.10*k;
-    uLeg = 20-45*k; lLeg=-30+55*k; uArm=-20-40*k;
-    torsoRot = 4*Math.sin(k*Math.PI);
-  } else if(p<0.85){
-    const k=(p-0.6)/0.25;
-    y = -60 + 60*easeInCubic(k);
-    torsoScale = 1.04-0.04*k;
-    uLeg = -25+45*k; lLeg=25-45*k; uArm=-60+50*k;
-  } else {
-    const k=(p-0.85)/0.15;
-    y = 6*Math.sin(k*Math.PI);
-    torsoScale = 1-0.05*Math.sin(k*Math.PI);
-    uLeg = 20*Math.sin(k*Math.PI); lLeg=-20*Math.sin(k*Math.PI); uArm=-10*Math.sin(k*Math.PI);
-  }
-  const finished = p>=1;
-  return { finished, pose:{
-    torsoX:0, torsoRotY: y, torsoRot, torsoScaleY: torsoScale,
-    head: -torsoRot*0.4,
-    uArmL: uArm, lArmL: 10, handL: 8, uArmR: uArm, lArmR: 10, handR: 8,
-    uLegL: uLeg, lLegL: lLeg, uLegR: uLeg, lLegR: lLeg,
-  }};
-}
-
-let lastT = performance.now();
-let clock=0;
-let currentPose = poseIdle(0);
-
-function loop(now){
-  const dt=(now-lastT)/1000; lastT=now;
-  clock += dt*speed;
-
-  if(jumpAnim){
-    const el = now - jumpAnim.start;
-    const {finished, pose} = poseJump(el);
-    currentPose = pose;
-    applyPose(pose);
-    if(finished) jumpAnim=null;
-  } else if(mode==='walk'){
-    currentPose = poseWalk(clock);
-    applyPose(currentPose);
-  } else {
-    currentPose = poseIdle(clock);
-    applyPose(currentPose);
-  }
-
-  if(isRecording) drawCanvasFrame(currentPose);
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-
-/* ================= Render ke <canvas> (dipakai untuk rekam & snapshot) ================= */
-const recCanvas = document.getElementById('recCanvas');
-const rctx = recCanvas.getContext('2d');
-
-function drawCanvasFrame(rawPose){
-  const pose = clampPose(rawPose);
-  const W = recCanvas.width, H = recCanvas.height;
-  rctx.clearRect(0,0,W,H);
-  // background sama seperti panggung
-  const grad = rctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,'#191a20');
-  grad.addColorStop(1,'#131318');
-  rctx.fillStyle = grad;
-  rctx.fillRect(0,0,W,H);
-  rctx.strokeStyle = '#3a3d49';
-  rctx.beginPath();
-  rctx.moveTo(0, H*(torsoYpct/100) + byId.torso.h*globalScale*0.5 + hipOff*0 + 210);
-  // garis tanah sederhana (statis, estetika saja)
-  rctx.globalAlpha=0.5;
-  rctx.moveTo(0, H*0.83); rctx.lineTo(W, H*0.83);
-  rctx.stroke();
-  rctx.globalAlpha=1;
-
-  const angles = {
-    torso:0, head:pose.head,
-    upperArmL:pose.uArmL, lowerArmL:pose.lArmL, handL:pose.handL,
-    upperArmR:pose.uArmR, lowerArmR:pose.lArmR, handR:pose.handR,
-    upperLegL:pose.uLegL, lowerLegL:pose.lLegL,
-    upperLegR:pose.uLegR, lowerLegR:pose.lLegR,
-  };
-
-  rctx.save();
-  const td = layoutData.torso;
-  rctx.translate(td.x, td.y);
-  rctx.translate(pose.torsoX, pose.torsoRotY);
-  rctx.rotate(pose.torsoRot*Math.PI/180);
-  rctx.scale(1, pose.torsoScaleY);
-  rctx.translate(-td.w/2, -td.h/2);
-  drawImgIfAny('torso', 0,0,td.w,td.h);
-  drawChildren('torso', angles);
-  rctx.restore();
-}
-
-function drawChildren(parentId, angles){
-  const kids = parentId==='torso' ? TORSO_PAINT_ORDER : (childrenOf[parentId] || []);
-  kids.forEach(id=>{
-    const d = layoutData[id];
-    rctx.save();
-    rctx.translate(d.x, d.y);
-    rctx.rotate((angles[id]||0)*Math.PI/180);
-    const ox = -d.w/2;
-    const oy = d.origin==='bottomcenter' ? -d.h : 0;
-    drawImgIfAny(id, ox, oy, d.w, d.h);
-    rctx.translate(ox, oy);
-    drawChildren(id, angles);
-    rctx.restore();
-  });
-}
-function drawImgIfAny(id, x,y,w,h){
-  const img = elMap[id].querySelector('img');
-  if(img && img.src && img.complete && img.naturalWidth>0){
-    rctx.drawImage(img, x, y, w, h);
-  }
-}
-
-/* ================= Rekam video & unduh PNG ================= */
-let isRecording=false, mediaRecorder=null, chunks=[];
-const recBtn = document.getElementById('recBtn');
-const recStatus = document.getElementById('recStatus');
-
-recBtn.addEventListener('click', ()=>{
-  if(!isRecording){
-    startRecording();
-  } else {
-    stopRecording();
-  }
-});
-
-function startRecording(){
-  chunks=[];
-  const stream = recCanvas.captureStream(30);
-  let mime = 'video/webm;codecs=vp9';
-  if(!MediaRecorder.isTypeSupported(mime)) mime='video/webm;codecs=vp8';
-  if(!MediaRecorder.isTypeSupported(mime)) mime='video/webm';
-  mediaRecorder = new MediaRecorder(stream, {mimeType:mime});
-  mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
-  mediaRecorder.onstop = ()=>{
-    const blob = new Blob(chunks, {type:'video/webm'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href=url; a.download='animasi-2d.webm';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 3000);
-    recStatus.textContent = 'Selesai — video terunduh sebagai animasi-2d.webm';
-  };
-  mediaRecorder.start();
-  isRecording=true;
-  recBtn.textContent='⏹ Stop & Unduh';
-  recBtn.classList.add('recording');
-  recStatus.textContent = 'Merekam mode "'+mode+'"... tekan Stop kapan saja.';
-}
-function stopRecording(){
-  if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
-  isRecording=false;
-  recBtn.textContent='🔴 Rekam Video (WebM)';
-  recBtn.classList.remove('recording');
-}
-
-document.getElementById('pngBtn').addEventListener('click', ()=>{
-  drawCanvasFrame(currentPose);
-  const url = recCanvas.toDataURL('image/png');
-  const a=document.createElement('a');
-  a.href=url; a.download='pose-2d.png';
-  document.body.appendChild(a); a.click(); a.remove();
-});
-</script>
 </body>
 </html>
